@@ -14,6 +14,21 @@ export default function ClaimClient() {
     const [error, setError] = useState(null);
     const { publicKey, sendTransaction } = useWallet();
 
+    const fetchEligibility = async () => {
+        try {
+            const res = await fetch('/api/check-eligibility');
+            if (!res.ok) {
+                throw new Error('Failed to fetch eligibility');
+            }
+            const data = await res.json();
+            setEligibility(data);
+            console.log("Eligibility data fetched:", data);
+        } catch (error) {
+            setError(error.message);
+            console.error("Error fetching eligibility:", error);
+        }
+    };
+
     const handleClaim = async () => {
         if (!publicKey) {
             alert('Please connect your wallet before claiming.');
@@ -102,7 +117,22 @@ export default function ClaimClient() {
                 throw new Error('Transaction confirmation failed');
             }
 
-            alert('Tokens claimed successfully!');
+            // Mise à jour de l'état de réclamation
+            const response = await fetch('/api/update-claim-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ handle: session.user.handle }),
+            });
+
+            if (response.ok) {
+                alert('Tokens claimed successfully!');
+                await fetchEligibility(); // Actualiser les données après réclamation
+            } else {
+                console.error('Failed to update claim status');
+            }
+
         } catch (error) {
             if (error.message.includes("User rejected the request")) {
                 console.log('Transaction signature rejected by user.');
@@ -115,21 +145,7 @@ export default function ClaimClient() {
 
     useEffect(() => {
         if (status === 'authenticated') {
-            fetch('/api/check-eligibility')
-                .then((res) => {
-                    if (!res.ok) {
-                        throw new Error('Failed to fetch eligibility');
-                    }
-                    return res.json();
-                })
-                .then((data) => {
-                    setEligibility(data);
-                    console.log("Eligibility data fetched:", data);
-                })
-                .catch((error) => {
-                    setError(error.message);
-                    console.error("Error fetching eligibility:", error);
-                });
+            fetchEligibility();
         }
     }, [status]);
 
@@ -157,6 +173,21 @@ export default function ClaimClient() {
 
     if (!eligibility) {
         return <p className="text-center text-gray-600">Checking your eligibility...</p>;
+    }
+
+    // S'assurer qu'on affiche un message clair si les tokens ont déjà été réclamés
+    if (eligibility.claimed) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen">
+                <p className="text-2xl mb-4 text-gray-600">You have already claimed your tokens.</p>
+                <button
+                    onClick={() => signOut("twitter", { callbackUrl: '/' })}
+                    className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg"
+                >
+                    Sign Out
+                </button>
+            </div>
+        );
     }
 
     return (
