@@ -2,6 +2,7 @@
   "name": "roro-website",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -15,6 +16,8 @@
     "@solana/wallet-adapter-react-ui": "^0.9.35",
     "@solana/wallet-adapter-wallets": "^0.19.32",
     "@solana/web3.js": "^1.95.2",
+    "mongodb": "^6.8.0",
+    "mongoose": "^8.5.3",
     "next": "14.2.5",
     "next-auth": "^4.24.7",
     "pino-pretty": "^11.2.2",
