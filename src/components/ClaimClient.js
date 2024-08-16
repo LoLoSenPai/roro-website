@@ -31,14 +31,16 @@ export default function ClaimClient() {
             console.log("Source Wallet Address:", sourceWalletAddress.toString());
             console.log("Public Key of Connected Wallet:", publicKey.toString());
 
+            // Créer le compte token associé de destination (celui du user) en spécifiant le fee payer comme l'utilisateur
             const toTokenAccount = await getOrCreateAssociatedTokenAccount(
                 connection,
-                publicKey,
+                publicKey,  // L'utilisateur paie les frais de création du compte associé
                 tokenMintAddress,
                 publicKey
             );
             console.log("Destination Token Account Address:", toTokenAccount.address.toString());
 
+            // Vérifier ou créer le compte token source (celui du wallet source)
             const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
                 connection,
                 sourceWallet.publicKey,
@@ -61,16 +63,14 @@ export default function ClaimClient() {
             );
 
             transaction.recentBlockhash = blockhash;
-            transaction.feePayer = publicKey;
+            transaction.feePayer = publicKey; // L'utilisateur paie les frais de la transaction
 
             console.log("Transaction created:", transaction);
 
-            transaction.sign(sourceWallet);
-
-            const signature = await sendTransaction(transaction, connection);
+            const signedTransaction = await sendTransaction(transaction, connection);
 
             const confirmationStrategy = {
-                signature,
+                signature: signedTransaction,
                 blockhash,
                 lastValidBlockHeight
             };
