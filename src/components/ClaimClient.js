@@ -1,7 +1,7 @@
 'use client';
 
 import { PublicKey, Transaction, Connection, Keypair } from '@solana/web3.js';
-import { getOrCreateAssociatedTokenAccount, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { createTransferInstruction, TOKEN_PROGRAM_ID, getAccount, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import secret from './guideSecret.json';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
@@ -22,7 +22,6 @@ export default function ClaimClient() {
 
         try {
             const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
-
             const tokenMintAddress = new PublicKey('DjP92poeVf2tXkAF4WVusBRywm8q3Dqd8thUhBjjMzWK');
             const sourceWallet = Keypair.fromSecretKey(Uint8Array.from(secret));
             const sourceWalletAddress = sourceWallet.publicKey;
@@ -31,31 +30,51 @@ export default function ClaimClient() {
             console.log("Source Wallet Address:", sourceWalletAddress.toString());
             console.log("Public Key of Connected Wallet:", publicKey.toString());
 
-            // Créer le compte token associé de destination (celui du user) en spécifiant le fee payer comme l'utilisateur
-            const toTokenAccount = await getOrCreateAssociatedTokenAccount(
-                connection,
-                publicKey,  // L'utilisateur paie les frais de création du compte associé
+            // Obtenir l'adresse du compte token associé pour l'utilisateur
+            const associatedTokenAddress = await getAssociatedTokenAddress(
                 tokenMintAddress,
                 publicKey
             );
-            console.log("Destination Token Account Address:", toTokenAccount.address.toString());
 
-            // Vérifier ou créer le compte token source (celui du wallet source)
-            const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
-                connection,
-                sourceWallet.publicKey,
+            // Vérifier si le compte existe, sinon, créer un compte token associé
+            let toTokenAccount;
+            try {
+                toTokenAccount = await getAccount(connection, associatedTokenAddress);
+                console.log("Destination Token Account Address exists:", toTokenAccount.address.toString());
+            } catch (error) {
+                console.log("Destination Token Account Address does not exist, creating...");
+                const createATAInstruction = createAssociatedTokenAccountInstruction(
+                    publicKey, // Payer les frais
+                    associatedTokenAddress,
+                    publicKey, // Propriétaire du compte
+                    tokenMintAddress
+                );
+
+                const transaction = new Transaction().add(createATAInstruction);
+
+                // Signer et envoyer la transaction pour créer le compte
+                const signature = await sendTransaction(transaction, connection);
+                await connection.confirmTransaction(signature, 'confirmed');
+
+                toTokenAccount = await getAccount(connection, associatedTokenAddress);
+                console.log("Destination Token Account Address created:", toTokenAccount.address.toString());
+            }
+
+            // Vérifier ou créer le compte token source
+            const fromTokenAccount = await getAssociatedTokenAddress(
                 tokenMintAddress,
-                sourceWallet.publicKey
+                sourceWalletAddress
             );
-            console.log("Source Token Account Address:", fromTokenAccount.address.toString());
+
+            console.log("Source Token Account Address:", fromTokenAccount.toString());
 
             const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
 
             const transaction = new Transaction().add(
                 createTransferInstruction(
-                    fromTokenAccount.address,
+                    fromTokenAccount,
                     toTokenAccount.address,
-                    sourceWallet.publicKey,
+                    sourceWalletAddress,
                     eligibility.tokens * 10 ** 8,
                     [],
                     TOKEN_PROGRAM_ID
@@ -63,14 +82,16 @@ export default function ClaimClient() {
             );
 
             transaction.recentBlockhash = blockhash;
-            transaction.feePayer = publicKey; // L'utilisateur paie les frais de la transaction
+            transaction.feePayer = publicKey;
 
             console.log("Transaction created:", transaction);
 
-            const signedTransaction = await sendTransaction(transaction, connection);
+            transaction.sign(sourceWallet);
+
+            const signature = await sendTransaction(transaction, connection);
 
             const confirmationStrategy = {
-                signature: signedTransaction,
+                signature,
                 blockhash,
                 lastValidBlockHeight
             };
