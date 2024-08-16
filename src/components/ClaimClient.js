@@ -14,21 +14,6 @@ export default function ClaimClient() {
     const [error, setError] = useState(null);
     const { publicKey, sendTransaction } = useWallet();
 
-    const fetchEligibility = async () => {
-        try {
-            const res = await fetch('/api/check-eligibility');
-            if (!res.ok) {
-                throw new Error('Failed to fetch eligibility');
-            }
-            const data = await res.json();
-            setEligibility(data);
-            console.log("Eligibility data fetched:", data);
-        } catch (error) {
-            setError(error.message);
-            console.error("Error fetching eligibility:", error);
-        }
-    };
-
     const handleClaim = async () => {
         if (!publicKey) {
             alert('Please connect your wallet before claiming.');
@@ -85,12 +70,14 @@ export default function ClaimClient() {
 
             const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
 
+            const tokensToClaim = BigInt(eligibility.tokens) * BigInt(10 ** 8);
+
             const transaction = new Transaction().add(
                 createTransferInstruction(
                     fromTokenAccount,
                     toTokenAccount.address,
                     sourceWalletAddress,
-                    eligibility.tokens * 10 ** 8,
+                    tokensToClaim,
                     [],
                     TOKEN_PROGRAM_ID
                 )
@@ -128,7 +115,8 @@ export default function ClaimClient() {
 
             if (response.ok) {
                 alert('Tokens claimed successfully!');
-                await fetchEligibility(); // Actualiser les données après réclamation
+                // Mise à jour de l'état local pour refléter le succès du claim
+                setEligibility((prev) => ({ ...prev, claimed: true }));
             } else {
                 console.error('Failed to update claim status');
             }
@@ -145,7 +133,21 @@ export default function ClaimClient() {
 
     useEffect(() => {
         if (status === 'authenticated') {
-            fetchEligibility();
+            fetch('/api/check-eligibility')
+                .then((res) => {
+                    if (!res.ok) {
+                        throw new Error('Failed to fetch eligibility');
+                    }
+                    return res.json();
+                })
+                .then((data) => {
+                    setEligibility(data);
+                    console.log("Eligibility data fetched:", data);
+                })
+                .catch((error) => {
+                    setError(error.message);
+                    console.error("Error fetching eligibility:", error);
+                });
         }
     }, [status]);
 
@@ -175,21 +177,6 @@ export default function ClaimClient() {
         return <p className="text-center text-gray-600">Checking your eligibility...</p>;
     }
 
-    // S'assurer qu'on affiche un message clair si les tokens ont déjà été réclamés
-    if (eligibility.claimed) {
-        return (
-            <div className="flex flex-col items-center justify-center h-screen">
-                <p className="text-2xl mb-4 text-gray-600">You have already claimed your tokens.</p>
-                <button
-                    onClick={() => signOut("twitter", { callbackUrl: '/' })}
-                    className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg"
-                >
-                    Sign Out
-                </button>
-            </div>
-        );
-    }
-
     return (
         <WalletModalProvider>
             <div className="flex flex-col items-center justify-center h-screen">
@@ -205,7 +192,7 @@ export default function ClaimClient() {
                             <button
                                 onClick={handleClaim}
                                 className="h-12 px-4 py-2 bg-green-500 text-white rounded-lg"
-                                disabled={!publicKey}
+                                disabled={!publicKey || eligibility.claimed}
                             >
                                 Claim Tokens
                             </button>
