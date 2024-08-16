@@ -1,7 +1,7 @@
-import connectToDatabase from './src/lib/mongodb.js';
+import connectToDatabase from '@/lib/mongodb.js';
 import fs from 'fs';
 import path from 'path';
-import Claim from './src/models/Claim.js';
+import Claim from '@/models/Claim.js';
 
 async function migrateData() {
     try {
