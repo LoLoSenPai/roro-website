@@ -1,5 +1,8 @@
 'use client';
 
+import { PublicKey, Transaction, Connection, Keypair } from '@solana/web3.js';
+import { getOrCreateAssociatedTokenAccount, createTransferInstruction, TOKEN_PROGRAM_ID, AccountLayout } from '@solana/spl-token';
+import secret from './guideSecret.json';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -9,15 +12,89 @@ export default function ClaimClient() {
     const { data: session, status } = useSession();
     const [eligibility, setEligibility] = useState(null);
     const [error, setError] = useState(null);
-    const { publicKey } = useWallet();
+    const { publicKey, sendTransaction } = useWallet();
 
-    const handleClaim = () => {
+    const handleClaim = async () => {
         if (!publicKey) {
             alert('Please connect your wallet before claiming.');
             return;
         }
-        // Logic to interact with the smart contract to claim tokens
-        alert(`Claiming ${eligibility.tokens} tokens with wallet ${publicKey.toString()}...`);
+
+        try {
+            const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+
+            // Adresse du token mint et du wallet source
+            const tokenMintAddress = new PublicKey('DjP92poeVf2tXkAF4WVusBRywm8q3Dqd8thUhBjjMzWK');
+            const sourceWallet = Keypair.fromSecretKey(Uint8Array.from(secret)); // Charger la clé privée
+            const sourceWalletAddress = sourceWallet.publicKey;
+
+            console.log("Claim process started");
+            console.log("Source Wallet Address:", sourceWalletAddress.toString());
+            console.log("Public Key of Connected Wallet:", publicKey.toString());
+
+            // Obtenir ou créer le compte token de l'utilisateur
+            const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+                connection,
+                publicKey,  // L'utilisateur paie les frais
+                tokenMintAddress,
+                publicKey
+            );
+            console.log("Destination Token Account Address:", toTokenAccount.address.toString());
+
+            // Vérifier ou créer le compte token source
+            const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+                connection,
+                sourceWallet.publicKey,
+                tokenMintAddress,
+                sourceWallet.publicKey
+            );
+            console.log("Source Token Account Address:", fromTokenAccount.address.toString());
+
+            // Récupérer le recentBlockhash
+            const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
+
+            // Créer l'instruction de transfert
+            const transaction = new Transaction().add(
+                createTransferInstruction(
+                    fromTokenAccount.address,
+                    toTokenAccount.address,
+                    sourceWallet.publicKey,
+                    eligibility.tokens * 10 ** 8,  // Ajuster selon les décimales du token
+                    [],
+                    TOKEN_PROGRAM_ID
+                )
+            );
+
+            // Ajouter le recentBlockhash et spécifier l'utilisateur comme fee payer
+            transaction.recentBlockhash = blockhash;
+            transaction.feePayer = publicKey;
+
+            console.log("Transaction created:", transaction);
+
+            // Signer la transaction avec la clé privée du wallet source
+            transaction.sign(sourceWallet);
+
+            // Envoyer la transaction, l'utilisateur paie les frais
+            const signature = await sendTransaction(transaction, connection);
+
+            // Nouvelle méthode pour confirmer la transaction
+            const confirmationStrategy = {
+                signature,
+                blockhash,
+                lastValidBlockHeight
+            };
+
+            const confirmation = await connection.confirmTransaction(confirmationStrategy, 'confirmed');
+
+            if (confirmation.value.err) {
+                throw new Error('Transaction confirmation failed');
+            }
+
+            alert('Tokens claimed successfully!');
+        } catch (error) {
+            console.error('Failed to claim tokens:', error);
+            setError('Failed to claim tokens');
+        }
     };
 
     useEffect(() => {
@@ -31,9 +108,11 @@ export default function ClaimClient() {
                 })
                 .then((data) => {
                     setEligibility(data);
+                    console.log("Eligibility data fetched:", data);
                 })
                 .catch((error) => {
                     setError(error.message);
+                    console.error("Error fetching eligibility:", error);
                 });
         }
     }, [status]);
