@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from '../auth/[...nextauth]/options';
 import connectToDatabase from '@/lib/mongodb';
@@ -8,7 +7,9 @@ export async function POST(req) {
     const session = await getServerSession({ req, ...authOptions });
 
     if (!session) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+        });
     }
 
     const { handle } = await req.json();
@@ -24,12 +25,18 @@ export async function POST(req) {
         );
 
         if (!result) {
-            return NextResponse.json({ error: 'Handle not found' }, { status: 404 });
+            return new Response(JSON.stringify({ error: 'Handle not found' }), {
+                status: 404,
+            });
         }
 
-        return NextResponse.json({ success: true });
+        return new Response(JSON.stringify({ success: true }), {
+            status: 200,
+        });
     } catch (error) {
         console.error('Failed to update claim status:', error);
-        return NextResponse.json({ error: 'Failed to update claim status' }, { status: 500 });
+        return new Response(JSON.stringify({ error: 'Failed to update claim status' }), {
+            status: 500,
+        });
     }
 }

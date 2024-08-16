@@ -3,10 +3,11 @@ import { authOptions } from '../auth/[...nextauth]/options';
 import connectToDatabase from '@/lib/mongodb';
 import Claim from '@/models/Claim';
 
-export async function GET(req) {
+export async function GET(req, res) {
     const session = await getServerSession({ req, ...authOptions });
 
     if (!session) {
+        console.log('No session found');
         return new Response(JSON.stringify({ error: 'Unauthorized' }), {
             status: 401,
         });
@@ -15,35 +16,41 @@ export async function GET(req) {
     const twitterHandle = session.user.handle;
 
     try {
+        console.log('Connecting to database...');
         await connectToDatabase();
 
-        // Vérifier si l'utilisateur a déjà claim
-        const claim = await Claim.findOne({ twitterHandle });
+        console.log('Searching for claim with twitterHandle:', twitterHandle);
+        const claim = await Claim.findOne({ twitterHandle }).lean(); // Utilisation de .lean()
 
-        if (claim && claim.claimed) {
+        console.log("Claim found:", claim); // Affiche le claim entier
+
+        if (!claim) {
             return new Response(
-                JSON.stringify({ eligible: false, message: "Already claimed." }),
+                JSON.stringify({ eligible: false, tokens: 0 }),
                 { status: 200 }
             );
         }
 
-        // Récupérer l'éligibilité de la base de données
-        const distribution = await Claim.findOne({ twitterHandle });
-
-        if (distribution) {
+        if (claim.claimed) {
             return new Response(
-                JSON.stringify({ eligible: true, tokens: distribution.tokens }),
-                { status: 200 }
-            );
-        } else {
-            return new Response(
-                JSON.stringify({ eligible: false, message: "Not eligible for this phase." }),
+                JSON.stringify({ eligible: false, tokens: 0, claimed: true }),
                 { status: 200 }
             );
         }
+
+        console.log("Type of claim.amount after conversion:", typeof claim.amount); // Vérifie le type après conversion
+        console.log("Claim amount value after conversion:", claim.amount); // Affiche la valeur après conversion
+
+        const tokens = parseInt(claim.amount, 10);
+        console.log("Eligible tokens to be claimed:", tokens);
+
+        return new Response(
+            JSON.stringify({ eligible: true, tokens }),  // Retourne directement `tokens`
+            { status: 200 }
+        );
     } catch (error) {
-        console.error('Error fetching eligibility:', error);
-        return new Response(JSON.stringify({ error: 'Failed to fetch eligibility' }), {
+        console.error('Failed to check eligibility:', error);
+        return new Response(JSON.stringify({ error: 'Failed to check eligibility' }), {
             status: 500,
         });
     }

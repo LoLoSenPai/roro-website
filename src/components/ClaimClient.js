@@ -30,13 +30,11 @@ export default function ClaimClient() {
             console.log("Source Wallet Address:", sourceWalletAddress.toString());
             console.log("Public Key of Connected Wallet:", publicKey.toString());
 
-            // Obtenir l'adresse du compte token associé pour l'utilisateur
             const associatedTokenAddress = await getAssociatedTokenAddress(
                 tokenMintAddress,
                 publicKey
             );
 
-            // Vérifier si le compte existe, sinon, créer un compte token associé
             let toTokenAccount;
             try {
                 toTokenAccount = await getAccount(connection, associatedTokenAddress);
@@ -44,15 +42,13 @@ export default function ClaimClient() {
             } catch (error) {
                 console.log("Destination Token Account Address does not exist, creating...");
                 const createATAInstruction = createAssociatedTokenAccountInstruction(
-                    publicKey, // Payer les frais
+                    publicKey,
                     associatedTokenAddress,
-                    publicKey, // Propriétaire du compte
+                    publicKey,
                     tokenMintAddress
                 );
 
                 const transaction = new Transaction().add(createATAInstruction);
-
-                // Signer et envoyer la transaction pour créer le compte
                 const signature = await sendTransaction(transaction, connection);
                 await connection.confirmTransaction(signature, 'confirmed');
 
@@ -60,7 +56,6 @@ export default function ClaimClient() {
                 console.log("Destination Token Account Address created:", toTokenAccount.address.toString());
             }
 
-            // Vérifier ou créer le compte token source
             const fromTokenAccount = await getAssociatedTokenAddress(
                 tokenMintAddress,
                 sourceWalletAddress
@@ -104,7 +99,6 @@ export default function ClaimClient() {
                 throw new Error('Transaction confirmation failed');
             }
 
-            // Mise à jour de l'état de réclamation
             const response = await fetch('/api/update-claim-status', {
                 method: 'POST',
                 headers: {
@@ -115,7 +109,6 @@ export default function ClaimClient() {
 
             if (response.ok) {
                 alert('Tokens claimed successfully!');
-                // Mise à jour de l'état local pour refléter le succès du claim
                 setEligibility((prev) => ({ ...prev, claimed: true }));
             } else {
                 console.error('Failed to update claim status');
@@ -141,8 +134,8 @@ export default function ClaimClient() {
                     return res.json();
                 })
                 .then((data) => {
+                    console.log("Fetched eligibility data:", data);  // LOG FOR DEBUGGING
                     setEligibility(data);
-                    console.log("Eligibility data fetched:", data);
                 })
                 .catch((error) => {
                     setError(error.message);
@@ -182,7 +175,7 @@ export default function ClaimClient() {
             <div className="flex flex-col items-center justify-center h-screen">
                 {eligibility.eligible ? (
                     <div className="text-center">
-                        <p className="text-2xl mb-4">You can claim <span className='text-green-500'>{eligibility.tokens}</span> tokens</p>
+                        <p className="text-2xl mb-4">You can claim <span className='text-green-500'>{eligibility.tokens || '0'}</span> tokens</p>
                         {publicKey ? (
                             <p className="mt-2 text-gray-700">Connected Wallet: <span className="font-mono">{publicKey.toString()}</span></p>
                         ) : (
