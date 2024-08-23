@@ -85,7 +85,9 @@ export default function ClaimClient() {
                         console.error('Failed to send transaction:', sendData.error);
                     }
                 } catch (walletError) {
-                    if (walletError.message.includes("User rejected the request")) {
+                    console.log("Error message:", walletError.message);
+                    if (walletError.message.includes("The user rejected the request through the wallet")) {
+                        console.log("Transaction was rejected by the user.");
                         return;
                     } else {
                         console.error('Transaction failed:', walletError);
