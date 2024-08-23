@@ -2,15 +2,37 @@ import { Connection } from '@solana/web3.js';
 
 export async function POST(req) {
     try {
+        // Utiliser la variable d'environnement NEXTAUTH_URL pour le domaine
+        const allowedOrigin = process.env.NEXTAUTH_URL || 'https://roro-token.lololabs.xyz';
+
+        const headers = {
+            'Access-Control-Allow-Origin': allowedOrigin,
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Content-Type': 'application/json',
+        };
+
+        if (req.method === 'OPTIONS') {
+            return new Response(null, {
+                status: 204,
+                headers: headers,
+            });
+        }
+
+        // Logique existante
         const { transaction, twitterHandle } = await req.json();
-        const connection = new Connection(process.env.QUICKNODE_RPC_URL, 'confirmed');
+        const connection = new Connection(process.env.NEXT_PUBLIC_QUICKNODE_RPC_URL, 'confirmed');
 
         const transactionBuffer = Buffer.from(transaction, 'base64');
         const signature = await connection.sendRawTransaction(transactionBuffer);
-        await connection.confirmTransaction(signature);
+        await connection.confirmTransaction({
+            signature,
+            blockhash: transaction.recentBlockhash,
+            lastValidBlockHeight: (await connection.getLatestBlockhash()).lastValidBlockHeight,
+        });
 
         // Appeler l'API pour mettre à jour le statut du claim
-        const updateResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/update-claim-status`, {
+        const updateResponse = await fetch(`${allowedOrigin}/api/update-claim-status`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -26,11 +48,13 @@ export async function POST(req) {
 
         return new Response(JSON.stringify({ success: true, signature }), {
             status: 200,
+            headers: headers,
         });
     } catch (error) {
         console.error('Failed to send transaction:', error);
         return new Response(JSON.stringify({ success: false, error: 'Detailed error message' }), {
             status: 500,
+            headers: headers,
         });
     }
 }

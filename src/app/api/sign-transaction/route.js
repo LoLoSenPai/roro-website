@@ -2,6 +2,20 @@ import { Keypair, Transaction, PublicKey, Connection } from '@solana/web3.js';
 import { createTransferInstruction, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, getAccount } from '@solana/spl-token';
 
 export async function POST(req) {
+    const headers = {
+        'Access-Control-Allow-Origin': process.env.NEXTAUTH_URL || 'https://roro-token.lololabs.xyz',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Type': 'application/json',
+    };
+
+    if (req.method === 'OPTIONS') {
+        return new Response(null, {
+            status: 204,
+            headers: headers,
+        });
+    }
+
     try {
         const { destination, amount, mintAddress } = await req.json();
 
@@ -66,14 +80,14 @@ export async function POST(req) {
 
         return new Response(JSON.stringify({ transaction: serializedTransaction }), {
             status: 200,
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
         });
 
     } catch (error) {
         console.error('Failed to create transaction:', error);
         return new Response(JSON.stringify({ error: 'Failed to create transaction' }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
         });
     }
 }

@@ -28,6 +28,7 @@ export default function ClaimClient() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     destination: publicKey.toString(),
                     amount: eligibility.tokens,
@@ -49,6 +50,7 @@ export default function ClaimClient() {
                         headers: {
                             'Content-Type': 'application/json',
                         },
+                        credentials: 'include',
                         body: JSON.stringify({
                             transaction: signedTransaction.serialize().toString('base64'),
                         }),
@@ -61,6 +63,7 @@ export default function ClaimClient() {
                             headers: {
                                 'Content-Type': 'application/json',
                             },
+                            credentials: 'include',
                             body: JSON.stringify({
                                 handle: session.user.handle,
                             }),
