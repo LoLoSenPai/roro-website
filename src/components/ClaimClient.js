@@ -10,7 +10,7 @@ export default function ClaimClient() {
     const { data: session, status } = useSession();
     const [eligibility, setEligibility] = useState(null);
     const [error, setError] = useState(null);
-    const { publicKey, signTransaction } = useWallet();
+    const { publicKey } = useWallet();
     const [isLoading, setIsLoading] = useState(false);
 
     const handleClaim = async () => {
@@ -40,29 +40,17 @@ export default function ClaimClient() {
                 const transaction = Transaction.from(Buffer.from(data.transaction, 'base64'));
 
                 try {
-                    const signedTransaction = await signTransaction(transaction);
+                    // Utilisation de la méthode Phantom pour signer et envoyer la transaction
+                    const { signature } = await window.solana.signAndSendTransaction(transaction);
 
-                    const sendResponse = await fetch('/api/send-transaction', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            transaction: signedTransaction.serialize().toString('base64'),
-                        }),
-                    });
-
-                    const sendData = await sendResponse.json();
-
-                    if (sendResponse.ok) {
-                        // Mettre à jour le statut du claim
+                    if (signature) {
                         const updateResponse = await fetch('/api/update-claim-status', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                                handle: session.user.handle, // Handle du user à mettre à jour
+                                handle: session.user.handle,
                             }),
                         });
 
@@ -73,7 +61,7 @@ export default function ClaimClient() {
                             console.error('Failed to update claim status:', await updateResponse.text());
                         }
                     } else {
-                        console.error('Failed to send transaction:', sendData.error);
+                        console.error('Failed to sign and send transaction');
                     }
                 } catch (walletError) {
                     if (walletError.message.includes("User rejected the request")) {
