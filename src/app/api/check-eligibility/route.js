@@ -26,26 +26,23 @@ export async function GET(req, res) {
 
         if (!claim) {
             return new Response(
-                JSON.stringify({ eligible: false, tokens: 0 }),
+                JSON.stringify({ eligible: false, tokens: 0, claimed: false }),
                 { status: 200 }
             );
         }
 
         if (claim.claimed) {
             return new Response(
-                JSON.stringify({ eligible: false, tokens: 0, claimed: true }),
+                JSON.stringify({ eligible: true, tokens: claim.amount, claimed: true }),
                 { status: 200 }
             );
         }
-
-        console.log("Type of claim.amount after conversion:", typeof claim.amount); // Vérifie le type après conversion
-        console.log("Claim amount value after conversion:", claim.amount); // Affiche la valeur après conversion
 
         const tokens = parseInt(claim.amount, 10);
         console.log("Eligible tokens to be claimed:", tokens);
 
         return new Response(
-            JSON.stringify({ eligible: true, tokens }),  // Retourne directement `tokens`
+            JSON.stringify({ eligible: true, tokens, claimed: false }),
             { status: 200 }
         );
     } catch (error) {

@@ -5,15 +5,16 @@ import { ConnectionProvider, WalletProvider as SolanaWalletProvider } from '@sol
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { PhantomWalletAdapter } from '@solana/wallet-adapter-wallets';
 
-const network = WalletAdapterNetwork.Devnet;
+// Utiliser le RPC privé
+const endpoint = process.env.NEXT_PUBLIC_QUICKNODE_RPC_URL;
 
 const wallets = [
-  new PhantomWalletAdapter(), // Ajoute ici les wallets que tu veux supporter
+  new PhantomWalletAdapter(),
 ];
 
 export default function WalletProvider({ children }) {
   return (
-    <ConnectionProvider endpoint={`https://api.${network}.solana.com`}>
+    <ConnectionProvider endpoint={endpoint}>
       <SolanaWalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           {children}
