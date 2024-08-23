@@ -7,12 +7,7 @@ export async function POST(req) {
 
         const transactionBuffer = Buffer.from(transaction, 'base64');
         const signature = await connection.sendRawTransaction(transactionBuffer);
-        await connection.confirmTransaction(signature, {
-            commitment: 'confirmed',
-            maxRetries: 5, // Essaye de confirmer plusieurs fois
-            minContextSlot: undefined,
-            until: Date.now() + 10000 // 10 secondes supplémentaires pour éviter le timeout
-        });
+        await connection.confirmTransaction(signature);
 
         // Appeler l'API pour mettre à jour le statut du claim
         const updateResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/update-claim-status`, {

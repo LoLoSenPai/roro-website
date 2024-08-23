@@ -1,5 +1,5 @@
 import { Keypair, Transaction, PublicKey, Connection } from '@solana/web3.js';
-import { createTransferInstruction, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, getAccount } from '@solana/spl-token';
+import { createTransferInstruction, TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 
 const seedArray = JSON.parse(process.env.SEEDPHRASE);
 const sourceWallet = Keypair.fromSecretKey(Uint8Array.from(seedArray));
@@ -9,50 +9,28 @@ export async function POST(req) {
         const { destination, amount, mintAddress } = await req.json();
 
         const connection = new Connection(process.env.QUICKNODE_RPC_URL, 'confirmed');
-        const tokenMintAddress = new PublicKey(mintAddress);
-        const destinationPublicKey = new PublicKey(destination);
         const transaction = new Transaction();
 
-        // Obtenir l'adresse du compte associé
-        const associatedTokenAddress = await getAssociatedTokenAddress(
-            tokenMintAddress,
-            destinationPublicKey
-        );
-
-        try {
-            // Vérifier si le compte associé existe
-            await getAccount(connection, associatedTokenAddress);
-            console.log("Associated Token Account already exists, no need to create it.");
-        } catch (error) {
-            console.log("Associated Token Account does not exist, creating it.");
-            const createATAInstruction = createAssociatedTokenAccountInstruction(
-                destinationPublicKey, // Le compte qui recevra les tokens et qui paie les frais
-                associatedTokenAddress,
-                destinationPublicKey,
-                tokenMintAddress
-            );
-            transaction.add(createATAInstruction);
-        }
-
         const fromTokenAccount = await getAssociatedTokenAddress(
-            tokenMintAddress,
+            new PublicKey(mintAddress),
             sourceWallet.publicKey
         );
-
-        const tokensToClaim = BigInt(amount) * BigInt(10 ** 6);
+        const toTokenAccount = await getAssociatedTokenAddress(
+            new PublicKey(mintAddress),
+            new PublicKey(destination)
+        );
 
         const transferInstruction = createTransferInstruction(
             fromTokenAccount,
-            associatedTokenAddress,
+            toTokenAccount,
             sourceWallet.publicKey,
-            tokensToClaim,
+            BigInt(amount) * BigInt(10 ** 6),
             [],
             TOKEN_PROGRAM_ID
         );
 
         transaction.add(transferInstruction);
-
-        transaction.feePayer = destinationPublicKey; // Le wallet de l'utilisateur paie les frais
+        transaction.feePayer = new PublicKey(destination);
         const { blockhash } = await connection.getLatestBlockhash('finalized');
         transaction.recentBlockhash = blockhash;
 
