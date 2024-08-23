@@ -7,14 +7,19 @@ export async function POST(req) {
 
         const transactionBuffer = Buffer.from(transaction, 'base64');
         const signature = await connection.sendRawTransaction(transactionBuffer);
-        await connection.confirmTransaction(signature);
+        await connection.confirmTransaction(signature, {
+            commitment: 'confirmed',
+            maxRetries: 5, // Essaye de confirmer plusieurs fois
+            minContextSlot: undefined,
+            until: Date.now() + 10000 // 10 secondes supplémentaires pour éviter le timeout
+        });
 
         // Appeler l'API pour mettre à jour le statut du claim
         const updateResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/update-claim-status`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Cookie': req.headers.get('cookie'), 
+                'Cookie': req.headers.get('cookie'),
             },
             body: JSON.stringify({ handle: twitterHandle }),
         });
@@ -29,7 +34,7 @@ export async function POST(req) {
         });
     } catch (error) {
         console.error('Failed to send transaction:', error);
-        return new Response(JSON.stringify({ error: 'Failed to send transaction' }), {
+        return new Response(JSON.stringify({ success: false, error: 'Detailed error message' }), {
             status: 500,
         });
     }

@@ -34,12 +34,7 @@ export default function ClaimClient() {
                 }),
             });
 
-            let data;
-            try {
-                data = await response.json();
-            } catch (jsonError) {
-                throw new Error(`Failed to parse JSON response: ${jsonError.message}`);
-            }
+            const data = await response.json();
 
             if (response.ok) {
                 const transaction = Transaction.from(Buffer.from(data.transaction, 'base64'));
@@ -57,14 +52,18 @@ export default function ClaimClient() {
                         }),
                     });
 
-                    let sendData;
-                    try {
-                        sendData = await sendResponse.json();
-                    } catch (jsonError) {
-                        throw new Error(`Failed to parse JSON response from send-transaction: ${jsonError.message}`);
+                    // Vérifie si l'envoi de la transaction a échoué
+                    if (!sendResponse.ok) {
+                        const errorText = await sendResponse.text();
+                        console.error('Failed to send transaction:', errorText);
+                        alert('Failed to send transaction due to a server error.');
+                        return; // On arrête l'exécution ici en cas d'erreur
                     }
 
-                    if (sendResponse.ok) {
+                    const sendData = await sendResponse.json();
+
+                    if (sendData.success) {
+                        // Mettre à jour le statut du claim
                         const updateResponse = await fetch('/api/update-claim-status', {
                             method: 'POST',
                             headers: {
@@ -85,9 +84,7 @@ export default function ClaimClient() {
                         console.error('Failed to send transaction:', sendData.error);
                     }
                 } catch (walletError) {
-                    console.log("Error message:", walletError.message);
-                    if (walletError.message.includes("The user rejected the request through the wallet")) {
-                        console.log("Transaction was rejected by the user.");
+                    if (walletError.message.includes("User rejected the request")) {
                         return;
                     } else {
                         console.error('Transaction failed:', walletError);
