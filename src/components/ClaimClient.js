@@ -39,40 +39,49 @@ export default function ClaimClient() {
             if (response.ok) {
                 const transaction = Transaction.from(Buffer.from(data.transaction, 'base64'));
 
-                const signedTransaction = await signTransaction(transaction);
+                try {
+                    const signedTransaction = await signTransaction(transaction);
 
-                const sendResponse = await fetch('/api/send-transaction', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        transaction: signedTransaction.serialize().toString('base64'),
-                    }),
-                });
-
-                const sendData = await sendResponse.json();
-
-                if (sendResponse.ok) {
-                    // Mettre à jour le statut du claim
-                    const updateResponse = await fetch('/api/update-claim-status', {
+                    const sendResponse = await fetch('/api/send-transaction', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            handle: session.user.handle, // Handle du user à mettre à jour
+                            transaction: signedTransaction.serialize().toString('base64'),
                         }),
                     });
 
-                    if (updateResponse.ok) {
-                        alert('Tokens claimed successfully!');
-                        setEligibility((prev) => ({ ...prev, claimed: true }));
+                    const sendData = await sendResponse.json();
+
+                    if (sendResponse.ok) {
+                        // Mettre à jour le statut du claim
+                        const updateResponse = await fetch('/api/update-claim-status', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                handle: session.user.handle, // Handle du user à mettre à jour
+                            }),
+                        });
+
+                        if (updateResponse.ok) {
+                            alert('Tokens claimed successfully!');
+                            setEligibility((prev) => ({ ...prev, claimed: true }));
+                        } else {
+                            console.error('Failed to update claim status:', await updateResponse.text());
+                        }
                     } else {
-                        console.error('Failed to update claim status:', await updateResponse.text());
+                        console.error('Failed to send transaction:', sendData.error);
                     }
-                } else {
-                    console.error('Failed to send transaction:', sendData.error);
+                } catch (walletError) {
+                    if (walletError.message.includes("User rejected the request")) {
+                        return;
+                    } else {
+                        console.error('Transaction failed:', walletError);
+                        alert('An error occurred while processing your transaction.');
+                    }
                 }
             } else {
                 console.error('Failed to claim tokens:', data.error);
