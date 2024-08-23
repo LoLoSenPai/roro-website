@@ -1,7 +1,6 @@
 'use client';
 
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { createTransferInstruction, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, getAccount } from '@solana/spl-token';
+import { Transaction } from '@solana/web3.js';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -23,68 +22,70 @@ export default function ClaimClient() {
         setIsLoading(true);
 
         try {
-            const connection = new Connection(process.env.NEXT_PUBLIC_QUICKNODE_RPC_URL, 'confirmed');
-            const transaction = new Transaction();
+            // Fetch the transaction from the server
+            const response = await fetch('/api/sign-transaction', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    destination: publicKey.toString(),
+                    amount: eligibility.tokens,
+                    mintAddress: 'EraznuWFJbuZUMkMpEMfLJpDX4X8b68JohmKucbDgc5r',
+                }),
+            });
 
-            const mintAddress = new PublicKey('EraznuWFJbuZUMkMpEMfLJpDX4X8b68JohmKucbDgc5r');
-            const sourceWallet = new PublicKey("GdVg1kKCjYP7moNE3N3W4KEio3ECSTnWqB6iNdzR5eUH");
+            const data = await response.json();
 
-            const associatedTokenAddress = await getAssociatedTokenAddress(mintAddress, publicKey);
+            if (response.ok) {
+                const transaction = Transaction.from(Buffer.from(data.transaction, 'base64'));
 
-            try {
-                await getAccount(connection, associatedTokenAddress);
-            } catch (error) {
-                const createATAInstruction = createAssociatedTokenAccountInstruction(
-                    publicKey,
-                    associatedTokenAddress,
-                    publicKey,
-                    mintAddress
-                );
-                transaction.add(createATAInstruction);
-            }
+                try {
+                    // The user signs the transaction
+                    const signedTransaction = await signTransaction(transaction);
 
-            const fromTokenAccount = await getAssociatedTokenAddress(mintAddress, sourceWallet);
-            const tokensToClaim = BigInt(eligibility.tokens) * BigInt(10 ** 6);
+                    const sendResponse = await fetch('/api/send-transaction', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            transaction: signedTransaction.serialize().toString('base64'),
+                        }),
+                    });
 
-            const transferInstruction = createTransferInstruction(
-                fromTokenAccount,
-                associatedTokenAddress,
-                sourceWallet,
-                tokensToClaim,
-                [],
-                TOKEN_PROGRAM_ID
-            );
+                    if (sendResponse.ok) {
+                        // Update the claim status
+                        const updateResponse = await fetch('/api/update-claim-status', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                handle: session.user.handle,
+                            }),
+                        });
 
-            transaction.add(transferInstruction);
-            transaction.feePayer = publicKey;
-            const { blockhash } = await connection.getLatestBlockhash('finalized');
-            transaction.recentBlockhash = blockhash;
-
-            try {
-                const signedTransaction = await signTransaction(transaction);
-                const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-
-                // Utilisation de TransactionConfirmationStrategy
-                const confirmationStrategy = {
-                    signature,
-                    blockhash,
-                    lastValidBlockHeight: transaction.lastValidBlockHeight,
-                };
-
-                await connection.confirmTransaction(confirmationStrategy, 'confirmed');
-
-                alert('Tokens claimed successfully!');
-                setEligibility((prev) => ({ ...prev, claimed: true }));
-            } catch (walletError) {
-                if (walletError.message.includes("User rejected the request")) {
-                    console.log("Transaction cancelled by user.");
-                    return; // Ne pas propager l'erreur
-                } else {
-                    console.error('Transaction failed:', walletError);
-                    alert('An error occurred while processing your transaction.');
+                        if (updateResponse.ok) {
+                            alert('Tokens claimed successfully!');
+                            setEligibility((prev) => ({ ...prev, claimed: true }));
+                        } else {
+                            console.error('Failed to update claim status:', await updateResponse.text());
+                        }
+                    } else {
+                        console.error('Failed to send transaction:', await sendResponse.text());
+                    }
+                } catch (walletError) {
+                    if (walletError.message.includes("User rejected the request")) {
+                        return;
+                    } else {
+                        console.error('Transaction failed:', walletError);
+                        alert('An error occurred while processing your transaction.');
+                    }
                 }
+            } else {
+                console.error('Failed to claim tokens:', data.error);
             }
-
         } catch (error) {
             console.error('Failed to claim tokens:', error);
             setError('Failed to claim tokens');

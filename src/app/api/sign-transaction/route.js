@@ -1,39 +1,61 @@
 import { Keypair, Transaction, PublicKey, Connection } from '@solana/web3.js';
-import { createTransferInstruction, TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
-
-const seedArray = JSON.parse(process.env.SEEDPHRASE);
-const sourceWallet = Keypair.fromSecretKey(Uint8Array.from(seedArray));
+import { createTransferInstruction, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, getAccount } from '@solana/spl-token';
 
 export async function POST(req) {
     try {
         const { destination, amount, mintAddress } = await req.json();
 
-        const connection = new Connection(process.env.QUICKNODE_RPC_URL, 'confirmed');
+        // Connexion au réseau Solana
+        const connection = new Connection(process.env.NEXT_PUBLIC_QUICKNODE_RPC_URL, 'confirmed');
+
+        // Accéder à la clé privée depuis une variable d'environnement sécurisée
+        const seedArray = JSON.parse(process.env.SEEDPHRASE);
+        const sourceWallet = Keypair.fromSecretKey(Uint8Array.from(seedArray));
+
+        const tokenMintAddress = new PublicKey(mintAddress);
+        const destinationPublicKey = new PublicKey(destination);
         const transaction = new Transaction();
 
+        // Vérifie si l'utilisateur a déjà un compte token associé
+        const associatedTokenAddress = await getAssociatedTokenAddress(
+            tokenMintAddress,
+            destinationPublicKey
+        );
+
+        try {
+            await getAccount(connection, associatedTokenAddress);
+        } catch (error) {
+            const createATAInstruction = createAssociatedTokenAccountInstruction(
+                destinationPublicKey,
+                associatedTokenAddress,
+                destinationPublicKey,
+                tokenMintAddress
+            );
+            transaction.add(createATAInstruction);
+        }
+
         const fromTokenAccount = await getAssociatedTokenAddress(
-            new PublicKey(mintAddress),
+            tokenMintAddress,
             sourceWallet.publicKey
         );
-        const toTokenAccount = await getAssociatedTokenAddress(
-            new PublicKey(mintAddress),
-            new PublicKey(destination)
-        );
+
+        const tokensToClaim = BigInt(amount) * BigInt(10 ** 6);
 
         const transferInstruction = createTransferInstruction(
             fromTokenAccount,
-            toTokenAccount,
+            associatedTokenAddress,
             sourceWallet.publicKey,
-            BigInt(amount) * BigInt(10 ** 6),
+            tokensToClaim,
             [],
             TOKEN_PROGRAM_ID
         );
 
         transaction.add(transferInstruction);
-        transaction.feePayer = new PublicKey(destination);
+        transaction.feePayer = destinationPublicKey;
         const { blockhash } = await connection.getLatestBlockhash('finalized');
         transaction.recentBlockhash = blockhash;
 
+        // Signer la transaction avec la clé privée du backend
         transaction.partialSign(sourceWallet);
 
         const serializedTransaction = transaction.serialize({
