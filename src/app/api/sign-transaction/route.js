@@ -39,7 +39,9 @@ export async function POST(req) {
             sourceWallet.publicKey
         );
 
-        const tokensToClaim = BigInt(amount) * BigInt(10 ** 6);
+        const accountInfo = await connection.getParsedAccountInfo(tokenMintAddress);
+        const decimals = accountInfo.value.data.parsed.info.decimals;
+        const tokensToClaim = BigInt(amount) * BigInt(10 ** decimals);
 
         const transferInstruction = createTransferInstruction(
             fromTokenAccount,
