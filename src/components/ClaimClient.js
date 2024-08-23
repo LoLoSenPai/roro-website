@@ -34,7 +34,12 @@ export default function ClaimClient() {
                 }),
             });
 
-            const data = await response.json();
+            let data;
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                throw new Error(`Failed to parse JSON response: ${jsonError.message}`);
+            }
 
             if (response.ok) {
                 const transaction = Transaction.from(Buffer.from(data.transaction, 'base64'));
@@ -52,17 +57,21 @@ export default function ClaimClient() {
                         }),
                     });
 
-                    const sendData = await sendResponse.json();
+                    let sendData;
+                    try {
+                        sendData = await sendResponse.json();
+                    } catch (jsonError) {
+                        throw new Error(`Failed to parse JSON response from send-transaction: ${jsonError.message}`);
+                    }
 
                     if (sendResponse.ok) {
-                        // Mettre à jour le statut du claim
                         const updateResponse = await fetch('/api/update-claim-status', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                                handle: session.user.handle, // Handle du user à mettre à jour
+                                handle: session.user.handle,
                             }),
                         });
 
