@@ -19,6 +19,11 @@ export default function ClaimClient() {
             return;
         }
 
+        if (!window.solana || !window.solana.isPhantom) {
+            alert('Phantom Wallet not detected. Please install Phantom and try again.');
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -40,7 +45,6 @@ export default function ClaimClient() {
                 const transaction = Transaction.from(Buffer.from(data.transaction, 'base64'));
 
                 try {
-                    // Utilisation de la méthode Phantom pour signer et envoyer la transaction
                     const { signature } = await window.solana.signAndSendTransaction(transaction);
 
                     if (signature) {
