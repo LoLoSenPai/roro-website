@@ -139,7 +139,7 @@ export default function ClaimClient() {
     }
 
     if (!eligibility) {
-        return <p className="text-center text-gray-600">Checking your eligibility...</p>;
+        return <p className="text-center text-gray-600 pt-32">Checking your eligibility...</p>;
     }
 
     return (
