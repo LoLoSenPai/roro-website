@@ -1,5 +1,6 @@
 "use client";
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function InteractiveHome() {
     const [hoveredElement, setHoveredElement] = useState(null);
@@ -24,21 +25,34 @@ export default function InteractiveHome() {
         <div className="relative" onMouseMove={handleMouseMove}>
             <div className="absolute top-0 left-0 w-full h-auto">
                 <img src="/assets/background.png" alt="background" className="w-full h-auto object-contain" />
+
                 <img
                     src={hoveredElement === 'casino' ? '/assets/casino-light.png' : '/assets/casino.png'}
                     alt="Casino"
                     className="absolute inset-0 w-full h-auto object-contain"
                 />
+
                 <img
                     src={hoveredElement === 'merch' ? '/assets/merch-light.png' : '/assets/merch.png'}
                     alt="Merch"
                     className="absolute inset-0 w-full h-auto object-contain"
                 />
-                <img
-                    src={hoveredElement === 'roroland' ? '/assets/roroland-light.png' : '/assets/roroland.png'}
-                    alt="RoroLand"
-                    className="absolute inset-0 w-full h-auto object-contain"
-                />
+
+                {hoveredElement === 'roroland' ? (
+                    <Link href="/claim">
+                        <img
+                            src="/assets/roroland-light.png"
+                            alt="RoroLand"
+                            className="absolute inset-0 w-full h-auto object-contain"
+                        />
+                    </Link>
+                ) : (
+                    <img
+                        src="/assets/roroland.png"
+                        alt="RoroLand"
+                        className="absolute inset-0 w-full h-auto object-contain"
+                    />
+                )}
             </div>
         </div>
     );

@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import Image from 'next/image';
 import { FaTelegramPlane } from 'react-icons/fa';
 import { FaXTwitter } from "react-icons/fa6";
 
