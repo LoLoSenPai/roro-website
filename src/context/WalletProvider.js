@@ -14,7 +14,7 @@ const wallets = [
 export default function WalletProvider({ children }) {
   return (
     <ConnectionProvider endpoint={process.env.NEXT_PUBLIC_QUICKNODE_RPC_URL}>
-      <SolanaWalletProvider wallets={wallets} autoConnect>
+      <SolanaWalletProvider wallets={wallets} autoConnect={false}>
         <WalletModalProvider>
           {children}
         </WalletModalProvider>
