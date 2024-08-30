@@ -38,20 +38,18 @@ export default function InteractiveHome() {
                     className="absolute inset-0 w-full h-auto object-contain"
                 />
 
-                {hoveredElement === 'roroland' ? (
-                    <Link href="/claim">
-                        <img
-                            src="/assets/roroland-light.png"
-                            alt="RoroLand"
-                            className="absolute inset-0 w-full h-auto object-contain"
-                        />
-                    </Link>
-                ) : (
-                    <img
-                        src="/assets/roroland.png"
-                        alt="RoroLand"
-                        className="absolute inset-0 w-full h-auto object-contain"
-                    />
+                <img
+                    src={hoveredElement === 'roroland' ? '/assets/roroland-light.png' : '/assets/roroland.png'}
+                    alt="RoroLand"
+                    className="absolute inset-0 w-full h-auto object-contain"
+                />
+
+                {hoveredElement === 'roroland' && (
+                    <Link href="/claim" className="absolute inset-0 w-full h-full" />
+                )}
+
+                {hoveredElement === 'merch' && (
+                    <Link href="/merch" target='blank' className="absolute inset-0 w-full h-full" />
                 )}
             </div>
         </div>
