@@ -27,6 +27,8 @@ function ClaimClient() {
     useEffect(() => {
         if (publicKey) {
             setIsWalletConnected(true);
+        } else {
+            setIsWalletConnected(false);
         }
     }, [publicKey]);
 
@@ -38,6 +40,11 @@ function ClaimClient() {
             }
             const data = await res.json();
             setEligibility(data);
+            if (data.claimed) {
+                setStep(5); // Déjà claimé
+            } else if (status === 'authenticated') {
+                setStep(2); // Connecté à Twitter, mais avant le claim
+            }
         } catch (error) {
             console.error('Failed to check eligibility:', error);
         }
@@ -92,7 +99,7 @@ function ClaimClient() {
 
                     if (sendResponse.ok) {
                         alert('Tokens claimed successfully!');
-                        setStep(3);
+                        setStep(5);
                         setEligibility((prev) => ({ ...prev, claimed: true }));
                     } else {
                         console.error('Failed to send transaction:', await sendResponse.text());
@@ -213,24 +220,45 @@ function Timeline({ step }) {
 }
 
 function MainText({ step, eligibility, session, handleNextStep, handleClaim, isWalletConnected }) {
+    if (step === 5) {
+        return (
+            <div className="flex flex-col justify-center items-center text-center w-full md:w-1/2 p-4 md:p-8 space-y-4">
+                <p className="text-4xl md:text-4xl font-bold mb-4">Congrats!!!</p>
+                <p className="text-2xl mb-4"><span className='text-amber-500 font-bold'>{eligibility.tokens}</span> coins have been added to your wallet!</p>
+                <button
+                    className="px-4 py-2 md:px-6 md:py-3 bg-black text-white rounded-full"
+                    onClick={() => window.location.href = '/'}
+                >
+                    Home
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col justify-center items-center text-center w-full md:w-1/2 p-4 md:p-8">
             {!session ? (
                 <div className="text-center z-10">
                     <p className="text-2xl md:text-3xl font-bold mb-4">Ready to claim? First...</p>
-                    <p className="mb-4">Connect your twitter to check your eligibility.</p>
+                    <p className="mb-4">Connect your Twitter to check your eligibility.</p>
                     <button
                         onClick={() => signIn("twitter", { callbackUrl: '/claim' })}
                         className="px-4 py-2 md:px-6 md:py-3 bg-black text-white rounded-full"
                     >
                         Connect
                     </button>
-                    <button className="px-4 py-2 md:px-6 md:py-3 bg-gray-300 text-black rounded-full mt-4" disabled>
+                    <button className="ml-4 px-4 py-2 md:px-6 md:py-3 bg-gray-300 text-black rounded-full mt-4" disabled>
                         Next
                     </button>
                 </div>
             ) : (
                 <WalletModalProvider>
+                    <button
+                        onClick={() => signOut("twitter", { callbackUrl: '/claim' })}
+                        className="px-4 py-2 md:px-6 md:py-3 bg-black text-white rounded-full"
+                    >
+                        Log out
+                    </button>
                     <div className="text-center md:text-left z-10">
                         {eligibility?.eligible ? (
                             <>
@@ -241,7 +269,7 @@ function MainText({ step, eligibility, session, handleNextStep, handleClaim, isW
                                     <>
                                         <p className="mb-4">Link your wallet to claim your coins.</p>
                                         <div className='flex justify-center space-x-3'>
-                                            <WalletMultiButton className="wallet-button" />
+                                            <WalletMultiButton className="!bg-blue-500" />
                                             <button
                                                 className={`px-4 py-2 md:px-6 md:py-3 ${isWalletConnected ? 'bg-white text-black' : 'bg-gray-300 text-black'} rounded-full `}
                                                 disabled={!isWalletConnected}
@@ -254,13 +282,18 @@ function MainText({ step, eligibility, session, handleNextStep, handleClaim, isW
                                 ) : (
                                     <>
                                         <p className="mb-4">
-                                            Claim your well-deserved {eligibility.tokens} tokens.
+                                            Claim your well-deserved <span className='text-amber-500 font-bold'>{eligibility.tokens}</span> tokens.
                                         </p>
                                         <button
-                                            className="px-4 py-2 md:px-6 md:py-3 bg-amber-500 text-white rounded-full"
+                                            className={`px-4 py-2 md:px-6 md:py-3 bg-amber-500 text-white rounded-full flex items-center justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             onClick={handleClaim}
+                                            disabled={isLoading}
                                         >
-                                            Claim
+                                            {isLoading ? (
+                                                <div className="loader"></div>
+                                            ) : (
+                                                'Claim'
+                                            )}
                                         </button>
                                     </>
                                 )}

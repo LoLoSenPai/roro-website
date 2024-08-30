@@ -12,7 +12,7 @@ export async function POST(req) {
         });
     }
 
-    const { handle } = await req.json();
+    const handle = session.user.handle;  // Utilise directement handle depuis la session
 
     try {
         await connectToDatabase();
@@ -21,7 +21,7 @@ export async function POST(req) {
         const result = await Claim.findOneAndUpdate(
             { twitterHandle: handle },
             { claimed: true, claimedAt: new Date() },
-            { new: true, upsert: true }
+            { new: true, upsert: false }
         );
 
         if (!result) {

@@ -26,6 +26,7 @@ export const options = {
         },
         async session({ session, token }) {
             session.user.handle = token.screen_name ? `@${token.screen_name}` : session.user.name;
+            console.log("Session handle:", session.user.handle);
             return session;
         },
     },

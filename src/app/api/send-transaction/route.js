@@ -1,8 +1,23 @@
 import { Connection } from '@solana/web3.js';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from '../auth/[...nextauth]/options';
 
 export async function POST(req) {
     try {
-        // Utiliser la variable d'environnement NEXTAUTH_URL pour le domaine
+        const session = await getServerSession({ req, ...authOptions });
+
+        if (!session) {
+            console.error('No session found');
+            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+                status: 401,
+            });
+        }
+
+        const twitterHandle = session.user.handle;
+
+        // Log the twitterHandle for debugging
+        console.log("Session twitterHandle:", twitterHandle);
+
         const allowedOrigin = process.env.NEXTAUTH_URL || 'https://roro-token.lololabs.xyz';
 
         const headers = {
@@ -19,8 +34,7 @@ export async function POST(req) {
             });
         }
 
-        // Logique existante
-        const { transaction, twitterHandle } = await req.json();
+        const { transaction } = await req.json();
         const connection = new Connection(process.env.NEXT_PUBLIC_QUICKNODE_RPC_URL, 'confirmed');
 
         const transactionBuffer = Buffer.from(transaction, 'base64');
@@ -52,7 +66,7 @@ export async function POST(req) {
         });
     } catch (error) {
         console.error('Failed to send transaction:', error);
-        return new Response(JSON.stringify({ success: false, error: 'Detailed error message' }), {
+        return new Response(JSON.stringify({ success: false, error: 'Failed to send transaction' }), {
             status: 500,
             headers: headers,
         });

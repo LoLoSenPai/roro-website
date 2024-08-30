@@ -20,7 +20,7 @@ export async function GET(req, res) {
         await connectToDatabase();
 
         console.log('Searching for claim with twitterHandle:', twitterHandle);
-        const claim = await Claim.findOne({ twitterHandle }).lean(); // Utilisation de .lean()
+        const claim = await Claim.findOne({ twitterHandle }).lean();
 
         console.log("Claim found:", claim); // Affiche le claim entier
 
