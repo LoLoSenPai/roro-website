@@ -14,6 +14,7 @@ function ClaimClient() {
     const [eligibility, setEligibility] = useState(null);
     const { publicKey, signTransaction } = useWallet();
     const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingEligibility, setIsLoadingEligibility] = useState(true);
     const [step, setStep] = useState(1);
     const [isWalletConnected, setIsWalletConnected] = useState(false);
 
@@ -47,6 +48,8 @@ function ClaimClient() {
             }
         } catch (error) {
             console.error('Failed to check eligibility:', error);
+        } finally {
+            setIsLoadingEligibility(false);
         }
     };
 
@@ -123,13 +126,22 @@ function ClaimClient() {
         }
     };
 
+    if (isLoadingEligibility) {
+        return (
+            <div className="flex flex-col justify-center items-center h-screen w-full bg-[#FFECA9]">
+                <div className="loader"></div>
+                <p>Fetching your eligibility...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col md:flex-row h-screen w-full bg-[#FFECA9] justify-between">
             <div>
 
             </div>
             <Timeline step={step} />
-            <MainText step={step} eligibility={eligibility} session={session} handleNextStep={handleNextStep} handleClaim={handleClaim} isWalletConnected={isWalletConnected} />
+            <MainText step={step} eligibility={eligibility} session={session} handleNextStep={handleNextStep} handleClaim={handleClaim} isWalletConnected={isWalletConnected} isLoading={isLoading} />
             <BottomImage step={step} />
         </div>
     );
