@@ -219,7 +219,7 @@ function Timeline({ step }) {
     );
 }
 
-function MainText({ step, eligibility, session, handleNextStep, handleClaim, isWalletConnected }) {
+function MainText({ step, eligibility, session, handleNextStep, handleClaim, isWalletConnected, isLoading }) {
     if (step === 5) {
         return (
             <div className="flex flex-col justify-center items-center text-center w-full md:w-1/2 p-4 md:p-8 space-y-4">
