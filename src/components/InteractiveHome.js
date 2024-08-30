@@ -23,7 +23,7 @@ export default function InteractiveHome() {
 
     return (
         <div className="relative" onMouseMove={handleMouseMove}>
-            <div className="absolute top-0 left-0 w-full h-auto">
+            <div className="relative w-full h-auto">
                 <img src="/assets/smoke.gif" alt="background" className="w-full h-auto object-contain" />
 
                 <img

@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { Transaction } from '@solana/web3.js';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
