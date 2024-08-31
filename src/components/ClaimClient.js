@@ -22,7 +22,7 @@ function ClaimClient() {
             setStep(2);
             checkEligibility();
         } else {
-            setIsLoadingEligibility(false); // Arrêter le loader si l'utilisateur n'est pas authentifié
+            setIsLoadingEligibility(false);
         }
     }, [status]);
 
@@ -244,80 +244,88 @@ function MainText({ step, eligibility, session, handleNextStep, handleClaim, isW
                 >
                     Home
                 </button>
+                <button
+                    onClick={() => signOut("twitter", { callbackUrl: '/claim' })}
+                    className="px-4 py-2 md:px-6 md:py-3 bg-black text-white rounded-full"
+                >
+                    Log Out
+                </button>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col justify-center items-center text-center w-full md:w-1/2 p-4 md:p-8">
-            {!session ? (
-                <div className="text-center z-10">
-                    <p className="text-2xl md:text-3xl font-bold mb-4">Ready to claim? First...</p>
-                    <p className="mb-4">Connect your Twitter to check your eligibility.</p>
-                    <button
-                        onClick={() => signIn("twitter", { callbackUrl: '/claim' })}
-                        className="px-4 py-2 md:px-6 md:py-3 bg-black text-white rounded-full"
-                    >
-                        Connect
-                    </button>
-                    <button className="ml-4 px-4 py-2 md:px-6 md:py-3 bg-gray-300 text-black rounded-full mt-4" disabled>
-                        Next
-                    </button>
-                </div>
-            ) : (
-                <WalletModalProvider>
-                    <button
-                        onClick={() => signOut("twitter", { callbackUrl: '/claim' })}
-                        className="px-4 py-2 md:px-6 md:py-3 bg-black text-white rounded-full"
-                    >
-                        Log out
-                    </button>
-                    <div className="text-center md:text-left z-10">
-                        {eligibility?.eligible ? (
-                            <>
-                                <p className="text-2xl md:text-3xl font-bold mb-4">
-                                    {step === 2 ? 'Now...' : 'And finally...'}
-                                </p>
-                                {step === 2 ? (
-                                    <>
-                                        <p className="mb-4">Link your wallet to claim your coins.</p>
-                                        <div className='flex justify-center space-x-3'>
-                                            <WalletMultiButton className="!bg-blue-500" />
-                                            <button
-                                                className={`px-4 py-2 md:px-6 md:py-3 ${isWalletConnected ? 'bg-white text-black' : 'bg-gray-300 text-black'} rounded-full `}
-                                                disabled={!isWalletConnected}
-                                                onClick={handleNextStep}
-                                            >
-                                                Next
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <p className="mb-4">
-                                            Claim your well-deserved <span className='text-amber-500 font-bold'>{eligibility.tokens}</span> tokens.
-                                        </p>
-                                        <button
-                                            className={`px-4 py-2 md:px-6 md:py-3 bg-amber-500 text-white rounded-full flex items-center justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                            onClick={handleClaim}
-                                            disabled={isLoading}
-                                        >
-                                            {isLoading ? (
-                                                <div className="loader"></div>
-                                            ) : (
-                                                'Claim'
-                                            )}
-                                        </button>
-                                    </>
-                                )}
-                            </>
-                        ) : (
-                            <p className="text-gray-600">You're not eligible for this claim phase.</p>
-                        )}
+        <WalletModalProvider>
+            <div className="flex flex-col justify-center items-center text-center w-full md:w-1/2 p-4 md:p-8">
+                {!session ? (
+                    <div className="text-center z-10">
+                        <p className="text-2xl md:text-3xl font-bold mb-4">Ready to claim? First...</p>
+                        <p className="mb-4">Connect your Twitter to check your eligibility.</p>
+                        <button
+                            onClick={() => signIn("twitter", { callbackUrl: '/claim' })}
+                            className="px-4 py-2 md:px-6 md:py-3 bg-black text-white rounded-full"
+                        >
+                            Connect
+                        </button>
+                        <button className="ml-4 px-4 py-2 md:px-6 md:py-3 bg-gray-300 text-black rounded-full mt-4" disabled>
+                            Next
+                        </button>
                     </div>
-                </WalletModalProvider>
-            )}
-        </div>
+                ) : (
+                    <>
+                        <button
+                            onClick={() => signOut("twitter", { callbackUrl: '/claim' })}
+                            className="px-4 py-2 md:px-6 md:py-3 bg-black text-white rounded-full"
+                        >
+                            Log out
+                        </button>
+                        <div className="text-center md:text-left z-10">
+                            {eligibility?.eligible ? (
+                                <>
+                                    <p className="text-2xl md:text-3xl font-bold mb-4">
+                                        {step === 2 ? 'Now...' : 'And finally...'}
+                                    </p>
+                                    {step === 2 ? (
+                                        <>
+                                            <p className="mb-4">Link your wallet to claim your coins.</p>
+                                            <div className='flex justify-center space-x-3'>
+                                                <WalletMultiButton className="!bg-blue-500" />
+                                                <button
+                                                    className={`px-4 py-2 md:px-6 md:py-3 ${isWalletConnected ? 'bg-white text-black' : 'bg-gray-300 text-black'} rounded-full `}
+                                                    disabled={!isWalletConnected}
+                                                    onClick={handleNextStep}
+                                                >
+                                                    Next
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="mb-4">
+                                                Claim your well-deserved <span className='text-amber-500 font-bold'>{eligibility.tokens}</span> tokens.
+                                            </p>
+                                            <button
+                                                className={`px-4 py-2 md:px-6 md:py-3 bg-amber-500 text-white rounded-full flex items-center justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                onClick={handleClaim}
+                                                disabled={isLoading}
+                                            >
+                                                {isLoading ? (
+                                                    <div className="loader"></div>
+                                                ) : (
+                                                    'Claim'
+                                                )}
+                                            </button>
+                                        </>
+                                    )}
+                                </>
+                            ) : (
+                                <p className="text-gray-600">You're not eligible for this claim phase.</p>
+                            )}
+                        </div>
+                    </>
+                )}
+            </div>
+        </WalletModalProvider>
     );
 }
 
