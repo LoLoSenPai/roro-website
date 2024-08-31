@@ -21,6 +21,8 @@ function ClaimClient() {
         if (status === 'authenticated') {
             setStep(2);
             checkEligibility();
+        } else {
+            setIsLoadingEligibility(false); // Arrêter le loader si l'utilisateur n'est pas authentifié
         }
     }, [status]);
 
