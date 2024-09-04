@@ -49,7 +49,7 @@ export default function InteractiveHome() {
                 )}
 
                 {hoveredElement === 'merch' && (
-                    <Link href="/merch" target='blank' className="absolute inset-0 w-full h-full" />
+                    <Link href="https://shop.lololabs.xyz/" target='blank' className="absolute inset-0 w-full h-full" />
                 )}
             </div>
         </div>
