@@ -157,7 +157,7 @@ function Timeline({ step }) {
     return (
         <>
             {/* Desktop version */}
-            <div className={`flex flex-col items-center justify-center w-1/4 h-full text-black max-md:hidden ${step === 4 ? 'animate-fade-out' : ''}`}>
+            <div className={`flex flex-col items-center justify-center w-1/4 h-full text-black max-md:hidden`}>
                 <div className="flex flex-col justify-center h-full">
 
                     {/* Step 1 */}
@@ -204,8 +204,8 @@ function Timeline({ step }) {
                         <div className="ml-4 flex-grow">
                             <p className="text-gray-500 text-xs">Step 3</p>
                             <p className="font-bold">Claim</p>
-                            <p className={`text-xs text-center ${step === 3 ? 'text-black bg-gray-200 p-1 rounded-full' : 'text-gray-400 bg-gray-100 p-1 rounded-full'}`}>
-                                {step === 3 ? 'In progress' : 'Upcoming'}
+                            <p className={`text-xs text-center ${step >= 5 ? 'text-white bg-green-500 p-1 rounded-full' : step === 3 ? 'text-black bg-gray-200 p-1 rounded-full' : 'text-gray-400 bg-gray-100 p-1 rounded-full'}`}>
+                                {step === 3 ? 'In progress' : step >= 5 ? 'Completed' : 'Upcoming'}
                             </p>
                         </div>
                     </div>
@@ -213,36 +213,49 @@ function Timeline({ step }) {
             </div>
 
             {/* Mobile version */}
-            <div className='flex justify-between items-start w-full p-4 md:hidden'>
+            <div className='flex justify-between items-start w-full p-4 md:hidden text-black'>
                 <div className="flex flex-col items-center">
-                    <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step >= 1 ? 'bg-green-500 text-white' : 'bg-gray-400'}`}>
-                        <FaXTwitter className="w-6 h-6" />
+                    {/* Step 1 */}
+                    <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step > 1 ? 'bg-green-500' : step === 1 ? 'bg-green-500' : 'bg-gray-400'}`}>
+                        <FaXTwitter className="w-6 h-6 text-white" />
                     </div>
                     <p className="text-gray-500 text-xs mt-2">Step 1</p>
                     <p className="font-bold text-center max-sm:text-sm">Connect Twitter</p>
-                    <p className="text-xs">{step === 1 ? 'In progress' : 'Completed'}</p>
+                    <p className={`text-xs ${step > 1 ? 'text-white bg-green-500 p-1 rounded-full' : step === 1 ? 'text-black bg-gray-200 p-1 rounded-full' : 'text-gray-400'}`}>
+                        {step === 1 ? 'In progress' : 'Completed'}
+                    </p>
                 </div>
+
                 <div className="flex items-start flex-grow">
                     <div className={`h-[2px] bg-gray-300 ${step >= 2 ? '' : 'hidden'} mt-5 mx-2`} style={{ maxWidth: '250px', flexGrow: 1 }}></div>
                 </div>
+
                 <div className="flex flex-col items-center">
-                    <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step >= 2 ? 'bg-green-500 text-white' : 'bg-gray-400'}`}>
-                        <FaWallet className="w-6 h-6" />
+                    {/* Step 2 */}
+                    <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step > 2 ? 'bg-green-500' : step === 2 ? 'bg-green-500' : 'bg-gray-400'}`}>
+                        <FaWallet className="w-6 h-6 text-white" />
                     </div>
                     <p className="text-gray-500 text-xs mt-2">Step 2</p>
                     <p className="font-bold text-center max-sm:text-sm">Connect Wallet</p>
-                    <p className="text-xs">{step === 2 ? 'In progress' : step > 2 ? 'Completed' : 'Upcoming'}</p>
+                    <p className={`text-xs ${step > 2 ? 'text-white bg-green-500 p-1 rounded-full' : step === 2 ? 'text-black bg-gray-200 p-1 rounded-full' : 'text-gray-400 bg-gray-100 p-1 rounded-full'}`}>
+                        {step === 2 ? 'In progress' : step > 2 ? 'Completed' : 'Upcoming'}
+                    </p>
                 </div>
+
                 <div className="flex items-start flex-grow">
                     <div className={`h-[2px] bg-gray-300 ${step >= 3 ? '' : 'hidden'} mt-5 mx-2`} style={{ maxWidth: '250px', flexGrow: 1 }}></div>
                 </div>
+
                 <div className="flex flex-col items-center">
-                    <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step >= 3 ? 'bg-green-500 text-white' : 'bg-gray-400'}`}>
-                        <FaCheckCircle className="w-6 h-6" />
+                    {/* Step 3 */}
+                    <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step >= 3 ? 'bg-green-500' : 'bg-gray-400'}`}>
+                        <FaCheckCircle className="w-6 h-6 text-white" />
                     </div>
                     <p className="text-gray-500 text-xs mt-2">Step 3</p>
                     <p className="font-bold text-center max-sm:text-sm">Claim</p>
-                    <p className="text-xs">{step === 3 ? 'In progress' : 'Upcoming'}</p>
+                    <p className={`text-xs ${step >= 5 ? 'text-white bg-green-500 p-1 rounded-full' : step === 3 ? 'text-black bg-gray-200 p-1 rounded-full' : 'text-gray-400 bg-gray-100 p-1 rounded-full'}`}>
+                        {step === 3 ? 'In progress' : step >= 5 ? 'Completed' : 'Upcoming'}
+                    </p>
                 </div>
             </div>
         </>
@@ -384,7 +397,7 @@ function BottomImage({ step }) {
             <img
                 src={`/assets/${step}-image.png`}
                 alt={`Step ${step} image`}
-                className="object-contain w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl"
+                className="object-contain w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-4xl"
                 style={{
                     height: 'auto',
                     maxHeight: '100vh',
