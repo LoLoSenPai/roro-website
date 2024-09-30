@@ -3,7 +3,7 @@ import { createTransferInstruction, TOKEN_PROGRAM_ID, getAssociatedTokenAddress,
 
 export async function POST(req) {
     const headers = {
-        'Access-Control-Allow-Origin': process.env.NEXTAUTH_URL || 'https://roro-token.lololabs.xyz',
+        'Access-Control-Allow-Origin': process.env.NEXTAUTH_URL || 'https://roroland.xyz',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json',

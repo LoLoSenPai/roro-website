@@ -18,7 +18,7 @@ export async function POST(req) {
         // Log the twitterHandle for debugging
         console.log("Session twitterHandle:", twitterHandle);
 
-        const allowedOrigin = process.env.NEXTAUTH_URL || 'https://roro-token.lololabs.xyz';
+        const allowedOrigin = process.env.NEXTAUTH_URL || 'https://roroland.xyz';
 
         const headers = {
             'Access-Control-Allow-Origin': allowedOrigin,

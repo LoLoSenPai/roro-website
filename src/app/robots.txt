@@ -2,4 +2,4 @@ User-Agent: *
 Allow: /
 Disallow: /private/
 
-Sitemap: https://roro-token.lololabs.xyz/sitemap.xml
+Sitemap: https://roroland.xyz/sitemap.xml
