@@ -44,13 +44,13 @@ export default function InteractiveHome() {
                     className="absolute inset-0 w-full h-auto object-contain"
                 />
 
-                {hoveredElement === 'roroland' && (
+                {/* {hoveredElement === 'roroland' && (
                     <Link href="/claim" className="absolute inset-0 w-full h-full" />
                 )}
 
                 {hoveredElement === 'merch' && (
                     <Link href="https://shop.roroland.xyz/" target='blank' className="absolute inset-0 w-full h-full" />
-                )}
+                )} */}
             </div>
         </div>
     );
