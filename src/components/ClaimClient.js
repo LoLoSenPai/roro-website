@@ -19,7 +19,6 @@ function ClaimClient() {
 
     useEffect(() => {
         if (status === 'authenticated') {
-            setStep(2);
             checkEligibility();
         } else {
             setIsLoadingEligibility(false);
@@ -44,8 +43,8 @@ function ClaimClient() {
             setEligibility(data);
             if (data.claimed) {
                 setStep(5); // Déjà claimé
-            } else if (status === 'authenticated') {
-                setStep(2); // Connecté à Twitter, mais avant le claim
+            } else if (status === 'authenticated' && step === 1) {
+                // L'utilisateur est authentifié mais reste au step 1 jusqu'à ce qu'il clique sur Next
             }
         } catch (error) {
             console.error('Failed to check eligibility:', error);
@@ -55,7 +54,9 @@ function ClaimClient() {
     };
 
     const handleNextStep = () => {
-        if (step === 2 && isWalletConnected) {
+        if (step === 1 && status === 'authenticated') {
+            setStep(2);
+        } else if (step === 2 && isWalletConnected) {
             setStep(3);
         }
     };
@@ -102,9 +103,13 @@ function ClaimClient() {
                     });
 
                     if (sendResponse.ok) {
-                        alert('Tokens claimed successfully!');
-                        setStep(5);
-                        setEligibility((prev) => ({ ...prev, claimed: true }));
+                        setIsLoading(false);
+                        setStep(4);
+
+                        setTimeout(() => {
+                            setStep(5);
+                            setEligibility((prev) => ({ ...prev, claimed: true }));
+                        }, 3000);
                     } else {
                         console.error('Failed to send transaction:', await sendResponse.text());
                     }
@@ -152,44 +157,56 @@ function Timeline({ step }) {
     return (
         <>
             {/* Desktop version */}
-            <div className="flex flex-col items-center justify-center w-1/4 p-4 p-8 h-full max-md:hidden">
+            <div className={`flex flex-col items-center justify-center w-1/4 h-full text-black max-md:hidden ${step === 4 ? 'animate-fade-out' : ''}`}>
                 <div className="flex flex-col justify-center h-full">
+
+                    {/* Step 1 */}
                     <div className="flex items-start">
                         <div className="relative flex flex-col items-center">
-                            <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step >= 1 ? 'bg-green-500 text-white' : 'bg-gray-400'}`}>
-                                <FaXTwitter className="w-6 h-6" />
+                            <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step > 1 ? 'bg-green-500' : step === 1 ? 'bg-green-500' : 'bg-gray-400'}`}>
+                                <FaXTwitter className="w-6 h-6 text-white" />
                             </div>
                             <div className={`w-[2px] h-16 ${step >= 2 ? 'bg-gray-300' : ''} my-4`}></div>
                         </div>
-                        <div className="ml-4 flex-grow justify-start">
-                            <p className="text-gray-500 text-xs text-sm">Step 1</p>
+                        <div className="ml-4 flex-grow">
+                            <p className="text-gray-500 text-xs">Step 1</p>
                             <p className="font-bold">Connect Twitter</p>
-                            <p className="text-xs text-sm">{step === 1 ? 'In progress' : 'Completed'}</p>
+                            <p className={`text-xs text-center ${step > 1 ? 'text-white bg-green-500 p-1 rounded-full' : step === 1 ? 'text-black bg-gray-200 p-1 rounded-full' : 'text-gray-400'}`}>
+                                {step === 1 ? 'In progress' : 'Completed'}
+                            </p>
                         </div>
                     </div>
+
+                    {/* Step 2 */}
                     <div className="flex items-start mt-0">
                         <div className="relative flex flex-col items-center">
-                            <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step >= 2 ? 'bg-green-500 text-white' : 'bg-gray-400'}`}>
-                                <FaWallet className="w-6 h-6" />
+                            <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step > 2 ? 'bg-green-500' : step === 2 ? 'bg-green-500' : 'bg-gray-400'}`}>
+                                <FaWallet className="w-6 h-6 text-white" />
                             </div>
                             <div className={`w-[2px] h-16 ${step >= 3 ? 'bg-gray-300' : ''} my-4`}></div>
                         </div>
                         <div className="ml-4 flex-grow">
-                            <p className="text-gray-500 text-xs text-sm">Step 2</p>
+                            <p className="text-gray-500 text-xs">Step 2</p>
                             <p className="font-bold">Connect Wallet</p>
-                            <p className="text-xs text-sm">{step === 2 ? 'In progress' : step > 2 ? 'Completed' : 'Upcoming'}</p>
+                            <p className={`text-xs text-center ${step > 2 ? 'text-white bg-green-500 p-1 rounded-full' : step === 2 ? 'text-black bg-gray-200 p-1 rounded-full' : 'text-gray-400 bg-gray-100 p-1 rounded-full'}`}>
+                                {step === 2 ? 'In progress' : step > 2 ? 'Completed' : 'Upcoming'}
+                            </p>
                         </div>
                     </div>
-                    <div className="flex items-center mt-4 mt-0">
+
+                    {/* Step 3 */}
+                    <div className="flex items-center mt-0">
                         <div className="relative flex flex-col items-center">
-                            <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step >= 3 ? 'bg-green-500 text-white' : 'bg-gray-400'}`}>
-                                <FaCheckCircle className="w-6 h-6" />
+                            <div className={`w-10 h-10 flex items-center justify-center rounded-full ${step >= 3 ? 'bg-green-500' : 'bg-gray-400'}`}>
+                                <FaCheckCircle className="w-6 h-6 text-white" />
                             </div>
                         </div>
                         <div className="ml-4 flex-grow">
-                            <p className="text-gray-500 text-xs text-sm">Step 3</p>
+                            <p className="text-gray-500 text-xs">Step 3</p>
                             <p className="font-bold">Claim</p>
-                            <p className="text-xs text-sm">{step === 3 ? 'In progress' : 'Upcoming'}</p>
+                            <p className={`text-xs text-center ${step === 3 ? 'text-black bg-gray-200 p-1 rounded-full' : 'text-gray-400 bg-gray-100 p-1 rounded-full'}`}>
+                                {step === 3 ? 'In progress' : 'Upcoming'}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -233,9 +250,21 @@ function Timeline({ step }) {
 }
 
 function MainText({ step, eligibility, session, handleNextStep, handleClaim, isWalletConnected, isLoading }) {
+    if (step === 4) {
+        return (
+            <div className="flex justify-center items-center h-screen w-full bg-[#FFECA9] animate-slide-down">
+                <img
+                    src="/assets/4-image.png"
+                    alt="Claim success animation"
+                    className="object-contain w-full max-w-md"
+                />
+            </div>
+        );
+    }
+
     if (step === 5) {
         return (
-            <div className="flex flex-col justify-center items-center text-center w-full md:w-1/2 p-4 md:p-8 space-y-4">
+            <div className="flex flex-col justify-center items-center text-center w-full md:w-1/2 space-y-4 animate-fade-in">
                 <p className="text-4xl md:text-4xl font-bold mb-4">Congrats!!!</p>
                 <p className="text-2xl mb-4"><span className='text-amber-500 font-bold'>{eligibility.tokens}</span> coins have been added to your wallet!</p>
                 <button
@@ -256,42 +285,61 @@ function MainText({ step, eligibility, session, handleNextStep, handleClaim, isW
 
     return (
         <WalletModalProvider>
-            <div className="flex flex-col justify-center items-center text-center w-full md:w-1/2 p-4 md:p-8">
-                {!session ? (
-                    <div className="text-center z-10">
-                        <p className="text-2xl md:text-3xl font-bold mb-4">Ready to claim? First...</p>
-                        <p className="mb-4">Connect your Twitter to check your eligibility.</p>
-                        <button
-                            onClick={() => signIn("twitter", { callbackUrl: '/claim' })}
-                            className="px-4 py-2 md:px-6 md:py-3 bg-black text-white rounded-full"
-                        >
-                            Connect
-                        </button>
-                        <button className="ml-4 px-4 py-2 md:px-6 md:py-3 bg-gray-300 text-black rounded-full mt-4" disabled>
-                            Next
-                        </button>
-                    </div>
+            <div className={`flex flex-col justify-center items-center text-center text-black max-md:h-full w-full md:w-1/2 ${step === 4 ? 'animate-fade-out' : ''}`}>
+                {!session || step < 2 ? (
+                    // Le contenu d'avant la claim (connexion Twitter)
+                    <>
+                        <div className="text-center z-10 space-y-10">
+                            <p className="text-5xl font-bold mb-4">Ready to claim? First...</p>
+                            <p className="text-2xl mb-4">Connect your Twitter to check your eligibility.</p>
+                            <div className='flex justify-center items-center'>
+                                <button
+                                    onClick={!session ? () => signIn("twitter", { callbackUrl: '/claim' }) : null}
+                                    className={`px-4 py-2 md:px-6 md:py-3 rounded-full w-40 bg-black text-white`}
+                                    disabled={!!session}
+                                >
+                                    <div className='flex flex-row justify-around'>
+                                        <FaXTwitter className="w-6 h-6" />
+                                        <span className="truncate w-full text-center">
+                                            {session ? session.user.name : 'Connect'}
+                                        </span>
+                                    </div>
+                                </button>
+                                <button
+                                    className={`ml-4 px-4 py-2 md:px-6 md:py-3 ${session ? 'bg-white text-black font-bold' : 'bg-gray-300 text-black'} rounded-full`}
+                                    onClick={handleNextStep}
+                                    disabled={!session}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                        {session && (
+                            <div className="flex justify-center items-center w-full mt-10">
+                                <button
+                                    onClick={() => signOut("twitter", { callbackUrl: '/claim' })}
+                                    className="px-4 py-2 md:px-6 md:py-3 text-gray-700 hover:text-black"
+                                >
+                                    Sign Out
+                                </button>
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <>
-                        <button
-                            onClick={() => signOut("twitter", { callbackUrl: '/claim' })}
-                            className="px-4 py-2 md:px-6 md:py-3 bg-black text-white rounded-full"
-                        >
-                            Log out
-                        </button>
-                        <div className="text-center md:text-left z-10">
+                        <div className="text-center z-10 space-y-10">
                             {eligibility?.eligible ? (
                                 <>
-                                    <p className="text-2xl md:text-3xl font-bold mb-4">
+                                    <p className="text-5xl font-bold mb-4">
                                         {step === 2 ? 'Now...' : 'And finally...'}
                                     </p>
                                     {step === 2 ? (
                                         <>
-                                            <p className="mb-4">Link your wallet to claim your coins.</p>
+                                            <p className="mb-4 text-2xl">Link your wallet to claim your coins.</p>
                                             <div className='flex justify-center space-x-3'>
                                                 <WalletMultiButton className="!bg-blue-500" />
                                                 <button
-                                                    className={`px-4 py-2 md:px-6 md:py-3 ${isWalletConnected ? 'bg-white text-black' : 'bg-gray-300 text-black'} rounded-full `}
+                                                    className={`px-4 py-2 md:px-6 md:py-3 font-bold ${isWalletConnected ? 'bg-white text-black' : 'bg-gray-300 text-black'} rounded-full `}
                                                     disabled={!isWalletConnected}
                                                     onClick={handleNextStep}
                                                 >
@@ -301,11 +349,12 @@ function MainText({ step, eligibility, session, handleNextStep, handleClaim, isW
                                         </>
                                     ) : (
                                         <>
-                                            <p className="mb-4">
-                                                Claim your well-deserved <span className='text-amber-500 font-bold'>{eligibility.tokens}</span> tokens.
-                                            </p>
+                                            <div>
+                                                <p className="mb-4 text-2xl">Claim your well-deserved</p>
+                                                <p className='text-2xl text-amber-500 font-bold'>{eligibility.tokens} tokens.</p>
+                                            </div>
                                             <button
-                                                className={`px-4 py-2 md:px-6 md:py-3 bg-amber-500 text-white rounded-full flex items-center justify-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                className={`px-4 py-2 md:px-6 md:py-3 bg-amber-500 text-white rounded-full flex items-center justify-center mx-auto ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                 onClick={handleClaim}
                                                 disabled={isLoading}
                                             >
@@ -319,19 +368,19 @@ function MainText({ step, eligibility, session, handleNextStep, handleClaim, isW
                                     )}
                                 </>
                             ) : (
-                                <p className="text-gray-600">You're not eligible for this claim phase.</p>
+                                <p className="text-gray-600 text-2xl">You're not eligible for this claim phase.</p>
                             )}
                         </div>
                     </>
                 )}
             </div>
-        </WalletModalProvider>
+        </WalletModalProvider >
     );
 }
 
 function BottomImage({ step }) {
     return (
-        <div className="relative w-full md:w-auto flex justify-center md:justify-end items-end md:items-end h-full">
+        <div className={`relative w-full md:w-auto flex justify-center md:justify-end items-end md:items-end h-full ${step === 4 ? 'animate-fade-out' : step === 4 ? 'animate-slide-down' : 'animate-fade-in'}`}>
             <img
                 src={`/assets/${step}-image.png`}
                 alt={`Step ${step} image`}
