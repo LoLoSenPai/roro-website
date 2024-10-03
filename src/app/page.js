@@ -8,10 +8,10 @@ export default function Home() {
     <div>
       <InteractiveHome />
       <div className="flex justify-end mt-10 mb-4 mr-10 md:mr-20 space-x-10">
-        <Link href='' target="blank">
+        <Link href='https://x.com/roronsol' target="blank">
           <FaXTwitter className="text-white text-3xl"/>
         </Link>
-        <Link href='' target="blank">
+        <Link href='https://t.me/RoroLandPortal' target="blank">
           <FaTelegramPlane className="text-white text-3xl"/>
         </Link>
       </div>

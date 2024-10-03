@@ -31,7 +31,7 @@ function Navbar() {
                     </div>
                     <div className="flex items-center space-x-2 text-3xl">
                         <a
-                            href="https://xdefi.com"
+                            href="https://x.com/roronsol"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-md font-bold link-neon hover:text-shadow-[0_0_8px_rgba(0,255,255,0.8)]"
@@ -39,7 +39,7 @@ function Navbar() {
                             <FaXTwitter />
                         </a>
                         <a
-                            href="https://t.me/robinhoodcoin"
+                            href="https://t.me/RoroLandPortal"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-md font-bold link-neon hover:text-shadow-[0_0_8px_rgba(0,255,255,0.8)]"
