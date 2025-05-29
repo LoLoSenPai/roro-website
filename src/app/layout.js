@@ -9,10 +9,10 @@ const museoModerno = MuseoModerno({ subsets: ["latin"] });
 
 export const metadata = {
   title: "$RORO WEBSITE",
-  description: "RoroLand on Solana",
+  description: "RoroLand on Ethereum",
   openGraph: {
     title: '$RORO WEBSITE',
-    description: 'RoroLand on Solana.',
+    description: 'RoroLand on Ethereum.',
     type: 'website',
     locale: 'en_US',
     url: 'https://roroland.xyz',
@@ -29,7 +29,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: '$RORO WEBSITE',
-    description: 'RoroLand on Solana.',
+    description: 'RoroLand on Ethereum.',
     image: 'https://roroland.xyz/overview-website.png',
   }
 };
@@ -44,9 +44,9 @@ export default function RootLayout({ children }) {
         <link rel="manifest" href="/manifest.json" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="$RORO WEBSITE" />
-        <meta name="twitter:description" content="RoroLand on Solana." />
+        <meta name="twitter:description" content="RoroLand on Ethereum." />
         <meta name="twitter:image" content="https://roroland.xyz/overview-website.png" />
-        <meta name="keywords" content="airdrop, solana, crypto airdrop, roroland, roro, land" />
+        <meta name="keywords" content="airdrop, ethereum, crypto airdrop, roroland, roro, land" />
       </head>
       <body className={museoModerno.className}>
         <AuthProvider>
