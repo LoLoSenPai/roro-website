@@ -3,6 +3,7 @@ import "./globals.css";
 import AuthProvider from '@/context/AuthProvider';
 import WalletProvider from '@/context/WalletProvider';
 // import Navbar from "@components/Navbar";
+import ToasterClient from '@/components/ToasterClient';
 
 const museoModerno = MuseoModerno({ subsets: ["latin"] });
 
@@ -52,6 +53,7 @@ export default function RootLayout({ children }) {
           <WalletProvider>
             {/* <Navbar /> */}
             {children}
+            <ToasterClient />
           </WalletProvider>
         </AuthProvider>
       </body>

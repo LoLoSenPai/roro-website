@@ -1,7 +1,10 @@
 import InteractiveHome from "@components/InteractiveHome";
 import { FaXTwitter } from "react-icons/fa6";
-import { FaTelegramPlane, FaCopy } from 'react-icons/fa';
+import { FaTelegramPlane } from 'react-icons/fa';
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const CopyContractAddress = dynamic(() => import("@/components/CopyContractAddress"), { ssr: false });
 
 export default function Home() {
   return (
@@ -13,10 +16,7 @@ export default function Home() {
         <Link href='https://t.me/RorolandETH' target="blank">
           <FaTelegramPlane className="text-white text-3xl hover:text-blue-500 hover:scale-110 transition-all duration-200" />
         </Link>
-        {/* change copy icon to 'CA' */}
-        <button className="text-white text-3xl">
-          <span className="text-white text-3xl hover:text-blue-500 hover:scale-110 transition-all duration-200">CA</span>
-        </button>
+        <CopyContractAddress />
       </div>
       <InteractiveHome />
     </div>
