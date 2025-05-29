@@ -13,8 +13,9 @@ export default function Home() {
         <Link href='https://t.me/RorolandETH' target="blank">
           <FaTelegramPlane className="text-white text-3xl hover:text-blue-500 hover:scale-110 transition-all duration-200" />
         </Link>
+        {/* change copy icon to 'CA' */}
         <button className="text-white text-3xl">
-          <FaCopy className="text-white text-3xl hover:text-blue-500 hover:scale-110 transition-all duration-200" />
+          <span className="text-white text-3xl hover:text-blue-500 hover:scale-110 transition-all duration-200">CA</span>
         </button>
       </div>
       <InteractiveHome />
