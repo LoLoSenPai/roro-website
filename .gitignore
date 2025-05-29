@@ -38,3 +38,6 @@ next-env.d.ts
 
 migrate.mjs
 distribution.json
+
+keypair.json
+script.js

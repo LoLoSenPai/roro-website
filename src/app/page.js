@@ -1,20 +1,23 @@
 import InteractiveHome from "@components/InteractiveHome";
 import { FaXTwitter } from "react-icons/fa6";
-import { FaTelegramPlane } from 'react-icons/fa';
+import { FaTelegramPlane, FaCopy } from 'react-icons/fa';
 import Link from "next/link";
 
 export default function Home() {
   return (
-    <div>
-      <InteractiveHome />
-      <div className="flex justify-end mt-10 mb-4 mr-10 md:mr-20 space-x-10">
-        <Link href='https://x.com/roronsol' target="blank">
-          <FaXTwitter className="text-white text-3xl"/>
+    <div className="relative">
+      <div className="absolute flex top-10 right-20 space-x-10 z-20">
+        <Link href='https://x.com/RoronETH' target="blank">
+          <FaXTwitter className="text-white text-3xl hover:text-blue-500 hover:scale-110 transition-all duration-200" />
         </Link>
-        <Link href='https://t.me/RoroLandPortal' target="blank">
-          <FaTelegramPlane className="text-white text-3xl"/>
+        <Link href='https://t.me/RorolandETH' target="blank">
+          <FaTelegramPlane className="text-white text-3xl hover:text-blue-500 hover:scale-110 transition-all duration-200" />
         </Link>
+        <button className="text-white text-3xl">
+          <FaCopy className="text-white text-3xl hover:text-blue-500 hover:scale-110 transition-all duration-200" />
+        </button>
       </div>
+      <InteractiveHome />
     </div>
   );
 }
