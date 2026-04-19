@@ -17,7 +17,7 @@
     "@solana/web3.js": "^1.95.2",
     "mongodb": "^6.8.0",
     "mongoose": "^8.5.3",
-    "next": "14.2.5",
+    "next": "14.2.35",
     "next-auth": "^4.24.7",
     "pino-pretty": "^11.2.2",
     "react": "^18",
